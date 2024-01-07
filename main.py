@@ -1,4 +1,4 @@
-from datetime import date
+from fastapi.responses import JSONResponse
 from fastapi import FastAPI
 from conexion import datos
 from conexion import connectionString
@@ -6,7 +6,7 @@ from pydantic import BaseModel
 import json
 import pyodbc
 
-app = FastAPI()\
+app = FastAPI()
     
 class articulo(BaseModel):
     id: int
@@ -16,10 +16,16 @@ class articulo(BaseModel):
     
 @app.get("/obtener")
 def read():
-    return (datos)
+    conn = pyodbc.connect(connectionString)
+    cursor = conn.cursor()
+    sql_query = "select * from articulos"
+    cursor = conn.cursor()
+    cursor.execute(sql_query)
+    select = cursor.fetchall()
+    dato2 = [dict(zip(["ïd", "nombre", "precio"],row)) for row in select]
+    return JSONResponse(content=dato2)
 
-
-@app.post("/insertar", response_model=articulo)
+@app.post("/insertar/articulo", response_model=articulo)
 def insert(articulo: articulo): 
     conn = pyodbc.connect(connectionString)
     cursor = conn.cursor()
@@ -29,7 +35,7 @@ def insert(articulo: articulo):
     cursor.close()
     return articulo
 
-@app.get("/inventario")
+@app.get("/lista/inventario")
 def obtener(id: int):
     conn = pyodbc.connect(connectionString)
     cursor = conn.cursor()
@@ -40,12 +46,11 @@ def obtener(id: int):
                       [row[0], row[1], row[2], row[3].isoformat()])) 
              for row in results
              ]
-    dato2 = json.dumps(dato2)
     cursor.close()
-    return dato2
+    return JSONResponse(content=dato2)
 
 
-@app.get("/delete")
+@app.delete("/delete")
 def delete(id: int):
     conn = pyodbc.connect(connectionString)
     cursor = conn.cursor()
@@ -67,7 +72,7 @@ def update(id: int, precio: int):
     return id
 
 
-@app.put("/newinv")
+@app.post("/insertar/stock")
 def newinv(id: int, stock: int):
     conn = pyodbc.connect(connectionString)
     cursor = conn.cursor()
@@ -75,25 +80,14 @@ def newinv(id: int, stock: int):
     cursor.execute(query, (id, stock))
     cursor.commit()
     cursor.close()
-    return id
+    return JSONResponse(content=id)
 
-@app.put("/actualizarinv")
+@app.put("/actualizar/articulo")
 def updateinv(id: int, precio: int):
     conn = pyodbc.connect(connectionString)
     cursor = conn.cursor()
     query = "update articulos set precio = ? where id = ?"
     cursor.execute(query, (precio, id))
-    cursor.commit()
-    cursor.close()
-    return id
-
-
-@app.delete("/deleteprod")
-def deleteprod(id: int):
-    conn = pyodbc.connect(connectionString)
-    cursor = conn.cursor()
-    query = "delete from articulos where id = ?"
-    cursor.execute(query, (id))
     cursor.commit()
     cursor.close()
     return id

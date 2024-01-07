@@ -2,10 +2,12 @@ import pyodbc
 import os
 import json
 
+
 # host = os.environ["url"]
 # Base = os.environ["DB"]
 # user = os.environ["usr"]
 # pwd = os.environ["pwd"]
+
 
 host = "localhost"
 Base = "crud2"
@@ -21,5 +23,5 @@ sql_query = "select * from articulos"
 cursor = conn.cursor()
 cursor.execute(sql_query)
 select = cursor.fetchall()
-dato2 = [dict(zip(["ïd","nombre","precio"],row)) for row in select]
+dato2 = [dict(zip(["ïd", "nombre", "precio"],row)) for row in select]
 datos = json.dumps(dato2)
